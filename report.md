@@ -30,7 +30,8 @@ The goals / steps of this project are the following:
 [video3]: report_images/result_video-problem-transformed.mp4 "original algorithm, problematic section, transformed"
 [video4]: report_images/result_video-problem-histogram.mp4 "original algorithm, problematic section, histogram"
 [video5]: report_images/result_video-improved.mp4 "improved algorithm, problematic section, histogram"
-[video6]: ./project_video.mp4 "Video"
+[video6]: ./project_video.mp4 "Original Video"
+[video7]: ./result_video.mp4 "Annotated Video"
 
 ## Basic organization in the project
 
@@ -208,7 +209,7 @@ This is a simple use of the inverse projection matrix. it can be seen at the bot
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./result_video.mp4)
 
 ---
 
