@@ -150,7 +150,7 @@ To indicate an ok result the similarity had to be below a threshold, choosen to 
 
 This algorithm already performs quite ok for most of the track. However, at some areas of the track lightening condition and the type of concrete changes and introduce a lot of noise in this pipeline. An example of that is the time around 21s to 25s. The following video shows how the algorithm performed originally in this section:
 
-![Problematic Section][video1]
+[Problematic Section][video1]
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
