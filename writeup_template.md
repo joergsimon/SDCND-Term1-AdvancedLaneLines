@@ -29,7 +29,7 @@ The goals / steps of this project are the following:
 
 ## Basic organization in the project
 
-The project is organised in two parts: One p[ython notebook](examples/example.ipynb) was used for exploration and tuning the algorithm for a single image. Images in the report are generally taken from this notebook.
+The project is organised in two parts: One [python notebook](examples/example.ipynb) was used for exploration and tuning the algorithm for a single image. Images in the report are generally taken from this notebook.
 
 After experimenting with that a python script to analyse the video is created called `process.py`. The path to the video and output are hardcoded in the programm. To generate a video you have to change these values and run the script. It can also generate a video of the bin threshold, the warp or the histogram, if you change the function used in fl_image.
 
@@ -64,7 +64,13 @@ I used a combination of color and gradient and directional thresholds to generat
 
 ![Basic binary threshold images][image1]
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+Based on these basic thresholds I explored combinations. In the end I used a big or over all these thresholds for a final threshold. Combinations can be seen in the next picture: 
+
+![Combined thresholds with or][image2]
+
+This image has a lot of noise in the background. However, this is not really a problem since in the perspective transform most of it goes out of the image range anyway. However, the we can still also apply the same masking we used in the project one, which I also did. The final image before transformation therefor looks this way:
+
+![masked threshold image][image3]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
