@@ -67,9 +67,9 @@ def process_image(image):
 camera_calibration = load_camera_calibration()
 print("making a videofileclip object")
 # for the final process the whole video
-# clip1 = VideoFileClip("project_video.mp4", audio=False)
+clip1 = VideoFileClip("project_video.mp4", audio=False)
 # for debug only process the problematic area of 21...25s
-clip1 = VideoFileClip("project_video.mp4", audio=False).subclip(t_start=19, t_end=26)
+# clip1 = VideoFileClip("project_video.mp4", audio=False).subclip(t_start=19, t_end=26)
 print("--> start processing")
 white_clip = clip1.fl_image(process_image)
 white_clip.write_videofile("result_video-improved.mp4", audio=False)
