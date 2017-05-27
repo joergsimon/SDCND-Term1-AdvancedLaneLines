@@ -25,7 +25,12 @@ The goals / steps of this project are the following:
 [image8]: report_images/transform_back.png "plynome transformed back"
 [image9]: report_images/transformed.png "Transformed Thresholds"
 [image10]: report_images/undistort_img.png "Undistored Image"
-[video1]: ./project_video.mp4 "Video"
+[video1]: report_images/result_video-problem.mp4 "original algorithm, problematic section"
+[video2]: report_images/result_video-problem-thresh.mp4 "original algorithm, problematic section, thresholds"
+[video3]: report_images/result_video-problem-transformed.mp4 "original algorithm, problematic section, transformed"
+[video4]: report_images/result_video-problem-histogram.mp4 "original algorithm, problematic section, histogram"
+[video5]: report_images/result_video-improved.mp4 "improved algorithm, problematic section, histogram"
+[video6]: ./project_video.mp4 "Video"
 
 ## Basic organization in the project
 
@@ -51,6 +56,8 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 ![Chessboard undistorted][image5]
 
+This calibration is actually calculated in the notebook and saved in a pickle file. The script `process.py` reads this pickle in `helper/undistort.py`
+
 ### Pipeline (single images)
 
 #### 1. Provide an example of a distortion-corrected image.
@@ -72,41 +79,78 @@ This image has a lot of noise in the background. However, this is not really a p
 
 ![masked threshold image][image3]
 
+Beside the code in the notebook, the final functions used for the video can be found in `helper/threshold.py` and `helper/threshold_utils.py` respectively.
+
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+The perspective transform was done using a fixed set of cooridnates more or less empirically choosen. It looks similar to the one provided in the example writeup, however, in the source image the rectangle stops a bit before the bottom to avoid having the car on the image, but still transforms that point to the bottom in the destination image. The final used coordinates can be found in `helper/transform.py`
+
+For simplicity I assumed the video and images to have a fixed size, and just added the values. Of course, if the video format changes, this breaks everything.
 
 ```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
+src = np.float32([
+    (132, 703),
+    (540, 466),
+    (720, 466),
+    (1147, 703)])
+dst = np.float32([
+    (200, 720),
+    (200, 0),
+    (1000, 0),
+    (1000, 720)])
 ```
 
-This resulted in the following source and destination points:
 
-| Source        | Destination   | 
-|:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear relatively parallel in the warped image. In many images the car is a bit off center, so in a correct transform the lines do not have to be perfectly parallel, but at least almost.
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
-
-![alt text][image4]
+![Transformed threshold image][image9]
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+All the code for this can be found in `helper/fit_polynomes.py`
 
-![alt text][image5]
+The basic algorithm was a naive version pretty much like proposed in the lectures. The main logic is expressed in the code snipplet below:
+
+```python
+def get_polynomes(image):
+    poly_is_ok = False
+    if not len(last_polys) == 0:
+        poly = find_poly(last_polys, image)
+        poly_is_ok = is_ok(poly)
+    if not poly_is_ok:
+        print('find poly again')
+        poly = find_poly_firstime(image, last_polys)
+        poly_is_ok = is_ok(poly)
+    if poly_is_ok:
+        s1 = smoothe(last_poly[-1], poly) if len(last_polys) > 1 else poly
+        push_pop(last_polys, s1)
+        if len(last_polys) > 1:
+            poly = reduce(smoothe, list(last_poly))
+        return poly
+    else: # poly is not ok even after searching again... return the last polynome for now...
+        print('retain last')
+        return last_poly[-1] if len(last_poly) > 0 else poly
+```
+
+So basically the last valid polynome is used for the search of the next one. If we do not have this last polynome, or the result of that search is not within a confidence (as determined by the angle of the polynomes, details later) we try to find a initial polynome using the histogram search outlined in the lectures. If after those steps a valid polynome can be found this polynome is avaraged with the last valid and pushed on the queue of valid polynomes. This queue always holds the last 10 valid polynomes. Then the Polynome is again avaraged over the last 10 valid polynomes. If no valid polynome could be found at all the last known valid polynome was used in the current frame. This occured very seldom.
+
+If the polynomes of a frame are ok is determined by the angle between those two polynomes which indicates how paralell they are. The angle is computed by
+```python
+def is_ok(poly):
+    if poly is None:
+        return False
+    letf_poly = poly[0]
+    right_poly = poly[0]
+    vec1 = letf_poly/np.linalg.norm(letf_poly)
+    vec2 = right_poly/np.linalg.norm(right_poly)
+    angle = np.arccos(np.dot(vec1, vec2))
+    return abs(angle) < PI_thresh_approx
+```
+To indicate an ok result the similarity had to be below a threshold, choosen to be 1/15 of Pi by experimentation.
+
+This algorithm already performs quite ok for most of the track. However, at some areas of the track lightening condition and the type of concrete changes and introduce a lot of noise in this pipeline. An example of that is the time around 21s to 25s. The following video shows how the algorithm performed originally in this section:
+
+![Problematic Section][video1]
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
