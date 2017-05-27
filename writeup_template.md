@@ -1,10 +1,4 @@
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
-
----
-
-**Advanced Lane Finding Project**
+# **Advanced Lane Finding Project**
 
 The goals / steps of this project are the following:
 
@@ -17,15 +11,27 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
+---
+
 [//]: # (Image References)
 
-[image1]: ./examples/undistort_output.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
+[image1]: report_images/basic_thresh.png "Basic Binary Thresholds Grid"
+[image2]: report_images/big_or_thresh.png "Combined Binary Thresholds Grid"
+[image3]: report_images/masked_thresh.png "Masked Combined Binary Thresholds Grid"
+[image4]: report_images/histogram.png "Histogram"
+[image5]: report_images/chessboard.png "Chessboard"
+[image6]: report_images/polynomes.png "fit polynomes"
+[image7]: report_images/polynomes_search.png "polynomes used for search"
+[image8]: report_images/transform_back.png "plynome transformed back"
+[image9]: report_images/transformed.png "Transformed Thresholds"
+[image10]: report_images/undistort_img.png "Undistored Image"
 [video1]: ./project_video.mp4 "Video"
+
+## Basic organization in the project
+
+The project is organised in two parts: One p[ython notebook](examples/example.ipynb) was used for exploration and tuning the algorithm for a single image. Images in the report are generally taken from this notebook.
+
+After experimenting with that a python script to analyse the video is created called `process.py`. The path to the video and output are hardcoded in the programm. To generate a video you have to change these values and run the script. It can also generate a video of the bin threshold, the warp or the histogram, if you change the function used in fl_image.
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
@@ -33,36 +39,32 @@ The goals / steps of this project are the following:
 
 ---
 
-### Writeup / README
-
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
-
-You're reading it!
-
 ### Camera Calibration
 
 #### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in the first code cell of the IPython notebook located in ["./examples/example.ipynb"](examples/example.ipynb) 
 
 I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
 
 I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
 
-![alt text][image1]
+![Chessboard undistorted][image5]
 
 ### Pipeline (single images)
 
 #### 1. Provide an example of a distortion-corrected image.
 
 To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-![alt text][image2]
+![Undistored car image][image10]
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+I used a combination of color and gradient and directional thresholds to generate a binary image. For the color threshold I transformed the image to the HLS color space and used the S channel additionally to the R channel in the RGB space and a greyscale image. I computed a magnitute threshold in the range of 30 to 100 based on the greyscale image. The greyscale image was also used for a directional threshold ranging from 0.7 to 1.3. A gradient in x direction was used for the red and grey image thresholded at 20 to 100. The S channel was directly thesholded on the pixel values between 170 to 255 to capture intense values. The result of this basic opeations can be seen in this picture:
 
-![alt text][image3]
+![Basic binary threshold images][image1]
+
+I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
