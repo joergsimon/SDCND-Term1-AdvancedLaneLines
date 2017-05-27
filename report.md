@@ -83,7 +83,7 @@ Beside the code in the notebook, the final functions used for the video can be f
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The perspective transform was done using a fixed set of cooridnates more or less empirically choosen. It looks similar to the one provided in the example writeup, however, in the source image the rectangle stops a bit before the bottom to avoid having the car on the image, but still transforms that point to the bottom in the destination image. The final used coordinates can be found in `helper/transform.py`
+The perspective transform was done using a fixed set of cooridnates more or less empirically choosen. It looks similar to the one provided in the example writeup, however, in the source image the rectangle stops a bit before the bottom to avoid having the car on the image, but still transforms that point to the bottom in the destination image. The final used coordinates can be found in [`helper/transform.py`](./helper/transform.py)
 
 For simplicity I assumed the video and images to have a fixed size, and just added the values. Of course, if the video format changes, this breaks everything.
 
@@ -157,7 +157,9 @@ This algorithm already performs quite ok for most of the track. However, at some
 To understand the problem I computed videos with the intermediate steps of the original algorithm on the section:
 
 [Problematic Section, binary threshold video][video2]
+
 [Problematic Section, perspective transformed video][video3]
+
 [Problematic Section, histogram video][video4]
 
 On the one side that showed me an programming error resulting in extreamly small values since I originally masked the binary image in a bit or with 255 values. On the other side especially the histogram video shows the problem the algorithm has to deal with. First there is a lot of noise. But second another area peaks as main peak in some frames, which is a problem when the search with the last polynome does not yield a valid result. To counter that beside the histogram search now also gets the last valid polinome as an input. When the histogram search is done for each window the x point of the lower y position of the window is computed and added as a bias to the mean. That means that a small peak can not move the line off center that fast. The imporant code section is the following:
@@ -192,7 +194,7 @@ This change, together with deciding on some parameters like the number of polyno
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-This can be seen in the [notebook](examples/example.ipynb) at the bottom, or in the file `helper/curvature.py`.
+This can be seen in the [notebook](examples/example.ipynb) at the bottom, or in the file [`helper/curvature.py`](./helper/curvature.py).
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
