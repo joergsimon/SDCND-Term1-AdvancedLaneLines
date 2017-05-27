@@ -28,7 +28,7 @@ def threshold(img):
     vertices = np.array(
         [[(0, big_or.shape[0]), (450, 325), (490, 325), (big_or.shape[1], big_or.shape[0])]],
         dtype=np.int32)
-    img_masked = region_of_interest(big_or, vertices)
+    img_masked = region_of_interest_binary(big_or, vertices)
     return img_masked
 
 def conversions(img):
@@ -41,6 +41,13 @@ def conversions(img):
     red = img[:, :, 0]
     return l_channel, s_channel, gray, red
 
+
+def region_of_interest_binary(img, vertices):
+    mask = np.zeros_like(img)
+    cv2.fillPoly(mask, vertices, 1)
+    result = np.zeros_like(img)
+    result[(mask == 1) & (img == 1)] = 1
+    return result
 
 def region_of_interest(img, vertices):
     """

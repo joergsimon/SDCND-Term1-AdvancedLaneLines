@@ -1,29 +1,50 @@
 import numpy as np
+from collections import deque
+from functools import reduce
 
+PI_thresh_approx = 3.141/15.0
 
-def get_polynomes(image, last_poly):
+last_poly = deque([])
+
+def push_pop(last_poly, poly):
+    last_poly.append(poly)
+    if len(last_poly) > 10:
+        last_poly.popleft()
+    return last_poly
+
+def get_polynomes(image):
     poly_is_ok = False
     lp = None
-    if not last_poly is None:
+    if not len(last_poly) == 0:
         poly = find_poly(last_poly, image)
         poly_is_ok = is_ok(poly)
-        if poly_is_ok:
-            poly = smoothe(last_poly, poly)
     if not poly_is_ok:
-        poly = find_poly_firstime(image)
+        print('find poly again')
+        poly = find_poly_firstime(image, last_poly)
         poly_is_ok = is_ok(poly)
     if poly_is_ok:
-        lp = poly
-    return poly, lp
+        s1 = smoothe(last_poly[-1], poly) if len(last_poly) > 1 else poly
+        push_pop(last_poly, s1)
+        if len(last_poly) > 1:
+            poly = reduce(smoothe, list(last_poly))
+        return poly
+    else: # poly is not ok even after searching again... return the last polynome for now...
+        print('retain last')
+        return last_poly[-1] if len(last_poly) > 0 else poly
 
 def is_ok(poly):
-    # TODO: implement something meaningful later
-    # basically I guess the angle between the two polys should do...?
-    return True
+    if poly is None:
+        return False
+    letf_poly = poly[0]
+    right_poly = poly[0]
+    vec1 = letf_poly/np.linalg.norm(letf_poly)
+    vec2 = right_poly/np.linalg.norm(right_poly)
+    angle = np.arccos(np.dot(vec1, vec2))
+    return abs(angle) < PI_thresh_approx
 
 def find_poly(last_poly, image):
-    left_fit = last_poly[0]
-    right_fit = last_poly[1]
+    left_fit = last_poly[-1][0]
+    right_fit = last_poly[-1][1]
     nonzero = image.nonzero()
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
@@ -39,13 +60,23 @@ def find_poly(last_poly, image):
     lefty = nonzeroy[left_lane_inds]
     rightx = nonzerox[right_lane_inds]
     righty = nonzeroy[right_lane_inds]
+
+    if len(leftx) == 0 or len(rightx)==0:
+        return None
     # Fit a second order polynomial to each
     left_fit = np.polyfit(lefty, leftx, 2)
     right_fit = np.polyfit(righty, rightx, 2)
 
+    # now we fit a polynome in the middle of the two to smoothe the curving
+
+    #middle = (left_fit + right_fit)/2.0
+    # so, now we only want to smooth the
+    #left_fit[0] = (middle[0]+left_fit[0])/2.0
+    #right_fit[0] = (middle[0]+right_fit[0])/2.0
+
     return (left_fit, right_fit)
 
-def find_poly_firstime(image):
+def find_poly_firstime(image, last_poly):
     histogram = np.sum(image[image.shape[0] // 2:, :], axis=0)
     midpoint = np.int(histogram.shape[0] / 2)
     leftx_base = np.argmax(histogram[:midpoint])
@@ -87,10 +118,21 @@ def find_poly_firstime(image):
         left_lane_inds.append(good_left_inds)
         right_lane_inds.append(good_right_inds)
         # If you found > minpix pixels, recenter next window on their mean position
+        # if there was a good last polynome, bias the finding algorithm towards that polynome:
         if len(good_left_inds) > minpix:
-            leftx_current = np.int(np.mean(nonzerox[good_left_inds]))
+            correction = np.array([])
+            if len(last_poly) > 0:
+                left = last_poly[-1][0]
+                center = left[0] * win_y_high ** 2 + left[1] * win_y_high + left[2]
+                correction = np.array([center]*15)
+            leftx_current = np.int(np.mean(np.concatenate((nonzerox[good_left_inds],correction))))
         if len(good_right_inds) > minpix:
-            rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
+            correction = np.array([])
+            if len(last_poly) > 0:
+                right = last_poly[-1][1]
+                center = right[0] * win_y_high ** 2 + right[1] * win_y_high + right[2]
+                correction = np.array([center]*15)
+            rightx_current = np.int(np.mean(np.concatenate((nonzerox[good_right_inds],correction))))
 
     # Concatenate the arrays of indices
     left_lane_inds = np.concatenate(left_lane_inds)
