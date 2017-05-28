@@ -31,5 +31,5 @@ def write_offset(image, offset, side):
 
 def write_curvature(image, curv):
     # TODO: do that, currently I just ignore...
-    cv2.putText(image, 'curvature : {:.3f} m'.format(curv), (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    cv2.putText(image, 'curvature : {:.3f} m'.format(curv), (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return image
