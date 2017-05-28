@@ -197,6 +197,12 @@ This change, together with deciding on some parameters like the number of polyno
 
 This can be seen in the [notebook](examples/example.ipynb) at the bottom, or in the file [`helper/curvature.py`](./helper/curvature.py).
 
+Basically two things were done: For the curvature, as up to this point nothing was computed in the metric system, the following trick was used: First I computed the middle polynome of the left and right polynome to get an avaraged value also for the curvature. Then basically I recomputed for each y value going from top to bottom of the x with the polynome. This array is then transformed into the metric space, and on it the polynome is fitted again, now with the correct ranges. Based on this the curvature formular from the lecture is used.
+
+For computing the center again again the avarage polynome of left and right is computed as this is the polynome who is in the center of those two. then the plynome is evaluated in pixel space at the bottom of the image. This point is then subtracted from the horizontal center of the image to get an offset. If the offset is negative we are on the right side, else on the left side. This offset is then transformed into metric space by multiplying with the constant provided in the course.
+
+This values fluctuated a lot, so I again smoothed them over the last 10 computations.
+
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
 This is a simple use of the inverse projection matrix. it can be seen at the bottom of the notebook or in the file `helper/transform.py` together with the main file where the inverse projection is done for the video.
