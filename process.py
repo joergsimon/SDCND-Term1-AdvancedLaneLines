@@ -3,8 +3,8 @@ from helper.undistort import undistort, load_camera_calibration
 from helper.threshold import threshold
 from helper.transform import get_tranfrorm_matrix, transform
 from helper.fit_polynomes import get_polynomes
-from helper.curvature import compute_curvature
-from helper.write_results import project_lanes, write_curvature
+from helper.curvature import compute_curvature, compute_offset
+from helper.write_results import project_lanes, write_curvature, write_offset
 
 import cv2
 import numpy as np
@@ -59,9 +59,11 @@ def process_image(image):
     M, Minv = get_tranfrorm_matrix(thresh)  # currently this is hardcoded, but it might change
     transf = transform(thresh, M)
     polys = get_polynomes(transf)
+    offset, side = compute_offset(polys)
     curv = compute_curvature(transf, polys)
     img_w_lanes = project_lanes(undist, polys, Minv)
-    img_w_curv = write_curvature(img_w_lanes, curv)
+    img_w_offset = write_offset(img_w_lanes, offset, side)
+    img_w_curv = write_curvature(img_w_offset, curv)
     return img_w_curv
 
 camera_calibration = load_camera_calibration()

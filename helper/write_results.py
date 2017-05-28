@@ -24,6 +24,12 @@ def project_lanes(image, poly, Minv):
     result = cv2.addWeighted(image, 1, newwarp, 0.3, 0)
     return result
 
+def write_offset(image, offset, side):
+    # TODO: do that, currently I just ignore...
+    cv2.putText(image, 'offset : {:.3f} m at {}'.format(offset, side), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    return image
+
 def write_curvature(image, curv):
     # TODO: do that, currently I just ignore...
+    cv2.putText(image, 'curvature : {:.3f} m'.format(curv), (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return image
