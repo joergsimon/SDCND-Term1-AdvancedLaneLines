@@ -23,15 +23,34 @@ def compute_offset(img, polynomes):
     middle = get_middle(polynomes)
     y = 720.0
     x = middle[0] * y ** 2 + middle[1] * y + middle[2]
-    img_center = img.shape[1] / 2.0
-    offset = img_center - x
-    side = 'left'
-    if offset < 0:
-        side = 'right'
-    offset_in_m = abs(offset)*xm_per_pix
-    push_pop(offsets, offset_in_m)
-    smoothed_offset_in_m = sum(offsets)/len(offsets)
-    return smoothed_offset_in_m, side
+
+    def eval_poly(p, y):
+        x = p[0] * y ** 2 + p[1] * y + p[2]
+        return x
+    ys = np.array(np.linspace(0, img.shape[0]-1, img.shape[0]))
+    left = np.array([eval_poly(polynomes[0], y) for y in ys])
+    right = np.array([eval_poly(polynomes[1], y) for y in ys])
+
+    # 10th value for x
+    lane_middle = int((left[10] - right[10]) / 2.) + right[10]
+
+    if (lane_middle - 640 > 0):
+        leng = 3.66 / 2
+        mag = ((lane_middle - 640) / 640. * leng)
+        return mag, "Right"
+    else:
+        leng = 3.66 / 2.
+        mag = ((lane_middle - 640) / 640. * leng) * -1
+        return mag, "Left"
+    # img_center = img.shape[1] / 2.0
+    # offset = img_center - x
+    # side = 'left'
+    # if offset < 0:
+    #     side = 'right'
+    # offset_in_m = abs(offset)*xm_per_pix
+    # push_pop(offsets, offset_in_m)
+    # smoothed_offset_in_m = sum(offsets)/len(offsets)
+    # return smoothed_offset_in_m, side
 
 def compute_curvature(img, polynomes):
     # inspired from https://github.com/pkern90/CarND-advancedLaneLines :
